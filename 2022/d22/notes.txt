@@ -1,0 +1,29 @@
+ A
+BCD
+ E
+ F
+
+A N: FS
+  S: CN
+  E: DN*
+  W: BN
+B N: AW
+  S: EW*
+  E: CW
+  W: FW*
+C N: AS
+  S: EN 
+  E: DW
+  W: BE
+D N: AE*
+  S: EE
+  E: FE*
+  W: CE
+E N: CS
+  S: FN
+  E: DS
+  W: BS*
+F N: ES
+  S: AN
+  E: DE*
+  W: BW*
