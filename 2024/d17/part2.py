@@ -1,5 +1,7 @@
 # https://adventofcode.com/2024/day/17
 
+import random
+
 input = """
 Register A: 2024
 Register B: 0
@@ -111,13 +113,74 @@ class Computer:
 
 input = open('data', 'r').read()
 computer = Computer(input)
-regA = 0
-maxlen = 0
-while computer.run(regA) == False:
-    outlen = len(computer.output)
-    if outlen > maxlen:
-        print(regA, computer.steps, len(computer.output), computer.output)
-        maxlen = outlen
-    regA += 1
-print(computer.output)
-print(regA)
+
+solutions = []
+
+def calcFitness(population):
+    scores = []
+    for regA in population:
+        if computer.run(regA):
+            print(f">>> {regA} {computer.output}")
+            solutions.append(regA)
+        outlen = len(computer.output)
+        score = outlen
+        #print(regA, computer.steps, len(computer.output), computer.output, correct, score)
+        scores.append((regA, score))
+    return scores
+
+def pickRandom(pool):
+    x = random.random()
+    sum = 0
+    for num, fit in pool:
+        sum += fit
+        if sum > x:
+            return num
+    return num
+
+def mutate(a):
+    return a ^ (1 << random.randint(0, 47))
+
+def crossover(a, b):
+    if a == b:
+        return mutate(a)
+
+    ba = bin(a)
+    bb = bin(b)
+    if len(ba) != len(bb):
+        return mutate(a)
+    else:
+        s = random.randint(0, len(ba)-1)
+        r = ba[:s] + bb[s:]
+        if len(r) != len(ba):
+            raise IndexError
+        return int(r, 2)
+
+def genetic(scores):
+    sz = len(scores)
+    fit = { p: s for p, s in scores }
+    total = sum(fit.values())
+    #print(fit, total)
+    normed = {k: v/total for k, v in fit.items()}
+    #print(normed)
+    pool = sorted(normed.items(), key=lambda item: item[1])
+    best = pool[-1][0]
+    print(f"best = {best} {fit[best]}")
+    next = [ best ]
+    for _ in range(sz-1):
+        a = pickRandom(pool)
+        b = pickRandom(pool)
+        c = crossover(a, b)
+        next.append(c)
+        #print(a, b, c)
+    return next
+
+popsize = 8000
+population = [random.randint(0, 2**48) for _ in range(popsize)]
+
+gen = 1
+while True:
+    print(gen)
+    fitness = calcFitness(population)
+    population = genetic(fitness)
+    print(solutions)
+    gen += 1
