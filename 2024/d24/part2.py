@@ -3,6 +3,7 @@
 import re
 import random
 import copy
+from concurrent.futures import ProcessPoolExecutor
 
 input = """
 x00: 0
@@ -25,6 +26,7 @@ x03 AND y03 -> z03
 x04 AND y04 -> z04
 x05 AND y05 -> z00
 """
+
 class Gate:
     def __init__(self, op, input1, input2, output):
         self.op = op
@@ -122,7 +124,14 @@ def testAdd(gates, bits):
     score = score/(bits+1)
     return score * score
 
-def testSwap(gates, pairs):
+
+input = open('data', 'r').read()
+
+wires, gates = parseInput(input)
+bits = len(wires.items())//2
+n = len(gates)
+
+def testSwap(pairs):
     #print(f"testSwap {pairs}")
     testGates = copy.deepcopy(gates)
     for i in range(0, len(pairs), 2):
@@ -138,29 +147,20 @@ def testSwap(gates, pairs):
             print(gates[i].output)
         exit(0)
 
-    # for gate in testGates:
-    #     print(gate)
-    # print(pairs, score)
-    return score
+    return (pairs, score)
 
-input = open('data', 'r').read()
-wires, gates = parseInput(input)
-bits = len(wires.items())//2
-# res = run(wires, gates)
-# print(res, len(res))
-
-# print(bits)
-# score = testAdd(gates, bits)
-# print(score)
-
-n = len(gates)
+baseline = testSwap([])[1]
 
 def calcFitness(population):
     scores = []
-    for p in population:
-        score = testSwap(gates, p)
-        #print(p, score)
-        scores.append((p, score))
+
+    with ProcessPoolExecutor(max_workers=8) as executor:
+        for result in executor.map(testSwap, population):
+            pairs, score = result
+            score -= baseline
+            if score < 0:
+                score = 0
+            scores.append((pairs, score))
     return scores
 
 def pickRandom(pool):
@@ -207,10 +207,12 @@ def genetic(scores):
         #print(a, b, c)
     return next
 
-population = [random.sample(range(n), 8) for _ in range(4000)]
+population = [random.sample(range(n), 8) for _ in range(1000)]
 gen = 1
-while True:
-    print(gen)
-    fitness = calcFitness(population)
-    population = genetic(fitness)
-    gen += 1
+# while True:
+#     print(gen)
+#     fitness = calcFitness(population)
+#     population = genetic(fitness)
+#     gen += 1
+
+print([gates[i].output for i in [172, 125, 30, 110, 113, 75, 76, 216]])
