@@ -42,24 +42,6 @@ for node, outputs in devices.items():
         reverse_graph[output].append(node)
 
 @lru_cache(maxsize=None)
-def can_reach(start, target, visited_tuple):
-    """Check if we can reach target from start, avoiding visited nodes"""
-    if start == target:
-        return True
-    if start not in devices:
-        return False
-
-    visited = set(visited_tuple)
-    visited.add(start)
-    visited_tuple = tuple(sorted(visited))
-
-    for neighbor in devices[start]:
-        if neighbor not in visited:
-            if can_reach(neighbor, target, visited_tuple):
-                return True
-    return False
-
-@lru_cache(maxsize=None)
 def count_paths_states(current, state):
     """
     Count paths from current to 'out' in a given state.
